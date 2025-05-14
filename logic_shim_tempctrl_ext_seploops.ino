@@ -27,6 +27,7 @@ unsigned long lastFanControlTime = 0;
 
 
 void setup() {
+    SerialBT.setPin("1515");
     pinMode(fanPin, OUTPUT);
     Serial.begin(115200);
     SerialBT.begin("ESP32_Fan_Control");  // Инициализация Bluetooth с именем устройства
