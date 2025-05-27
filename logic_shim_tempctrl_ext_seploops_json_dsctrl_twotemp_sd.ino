@@ -38,6 +38,11 @@ unsigned long lastTempTime = 0;
 unsigned long lastFanControlTime = 0;
 unsigned long lastDataSendTime = 0;
 
+
+float curExpStartTime = 0;
+float curMins = 0;
+float curElapsedTime = 0;
+
 float currentTemp1 = 0;
 float currentTemp2 = 0;
 float TempDiff = 0;
@@ -74,14 +79,17 @@ void setup() {
       Serial.println("SD Card MOUNT FAIL");
     } 
     startMillis = millis();
-    
+    curExpStartTime=millis();
 }
 
 
 
 void loop() {
     unsigned long currentMillis = millis();
-
+    //SerialBT.println(millis());
+    curMins=currentMillis/60000;
+    curElapsedTime=currentMillis-curExpStartTime;
+    curElapsedTime=curElapsedTime/60000;
     // Чтение температуры каждые 500 мс
     if (currentMillis - lastTempTime >= tempInterval) {
         lastTempTime = currentMillis;
@@ -90,12 +98,12 @@ void loop() {
             if (num_dev==2) {  // если чтение успешно
                 ds.select(sensor1Address);
                 currentTemp1=ds.getTempC();
-                Serial.println(currentTemp1);
+                //Serial.println(currentTemp1);
                 ds.select(sensor2Address);
                 currentTemp2=ds.getTempC();
-                Serial.println(currentTemp2);
+                //Serial.println(currentTemp2);
                 TempDiff=currentTemp1-currentTemp2;
-                Serial.println(TempDiff);
+                //Serial.println(TempDiff);
                 if (tar_sensor==1){
                   currentTemp=currentTemp1;
                   } else {currentTemp=currentTemp2;
@@ -141,7 +149,7 @@ void loop() {
                         pwmValue = 0;  // Вентилятор выключен, если температура ниже порога
                     }
                 }
-
+ 
                 if (write_SD==1){
                   String payload = "{";
                   payload += "\"temperature\":" + String(currentTemp) + ",";
@@ -158,10 +166,12 @@ void loop() {
                   payload += "\"tempInterval\":" + String(tempInterval) + ",";
                   payload += "\"fanInterval\":" + String(fanControlInterval) + ",";
                   payload += "\"dataSendInterval\":" + String(dataSendInterval) + ",";
-                  payload += "\"millis\":" + String(currentMillis) + ",";
+                  payload += "\"mins\":" + String(curMins) + ",";
+                  payload += "\"elapsedMins\":" + String(curElapsedTime) + ",";
                   payload += "\"expID\":" + String(exp_ID) + ",";
                   payload += "\"ishead\":" + String(0) + ",";
                   payload += "\"writeon\":" + String(write_SD) + ",";
+                  payload += "\"tarSensor\":" + String(tar_sensor);
                   payload += "}";
                   
                   File file = SD.open("/templog.txt", FILE_APPEND);
@@ -197,10 +207,12 @@ void loop() {
                 payload += "\"tempInterval\":" + String(tempInterval) + ",";
                 payload += "\"fanInterval\":" + String(fanControlInterval) + ",";
                 payload += "\"dataSendInterval\":" + String(dataSendInterval) + ",";
-                payload += "\"millis\":" + String(currentMillis) + ",";
+                payload += "\"mins\":" + String(curMins) + ",";
+                payload += "\"elapsedMins\":" + String(curElapsedTime) + ",";
                 payload += "\"expID\":" + String(exp_ID) + ",";
                 payload += "\"ishead\":" + String(0) + ",";
                 payload += "\"writeon\":" + String(write_SD) + ",";
+                payload += "\"tarSensor\":" + String(tar_sensor);
                 payload += "}";
                 SerialBT.println(payload);
       
@@ -267,11 +279,17 @@ void loop() {
         }
         if (command.startsWith("setid:")) { //1 or 2 (the sensor to control the fan)
             exp_ID = command.substring(6).toInt();  // Установка максимальной скорости
-            SerialBT.println(exp_ID);
+            //SerialBT.println(exp_ID);
+            curExpStartTime=millis();
         }
         if (command.startsWith("write_SD:")) {
             write_SD = command.substring(9).toInt();  
             if (write_SD==1){
+              if (!SD.begin(HSPI_CS, hspi)) 
+               {
+                  SerialBT.println("SD Card MOUNT FAIL");
+                  write_SD=3;
+               }
               if (!SD.exists("/templog.txt")) {
                 File file = SD.open("/templog.txt", FILE_WRITE);
                 String payload_header = "{";
@@ -289,18 +307,17 @@ void loop() {
                   payload_header += "\"tempInterval\":" + String(0) + ",";
                   payload_header += "\"fanInterval\":" + String(0) + ",";
                   payload_header += "\"dataSendInterval\":" + String(0) + ",";
-                  payload_header += "\"millis\":" + String(millis()) + ",";
+                  payload_header += "\"mins\":" + String(curMins) + ",";
+                  payload_header += "\"elapsedMins\":" + String(curElapsedTime) + ",";
                   payload_header += "\"expID\":" + String(exp_ID) + ",";
                   payload_header += "\"ishead\":" + String(1) + ",";
                   payload_header += "\"writeon\":" + String(write_SD) + ",";
+                  payload_header += "\"tarSensor\":" + String(tar_sensor);
                   payload_header += "}";
                 file.println(payload_header);
                 file.close();
                 SerialBT.println("SD write ON");
-                if (!SD.begin(HSPI_CS, hspi)) 
-                {
-                    SerialBT.println("SD Card MOUNT FAIL");
-                }
+
               }
           } else {SerialBT.println("SD write OFF");}
         }
@@ -325,10 +342,12 @@ void loop() {
                 payload_header += "\"tempInterval\":" + String(0) + ",";
                 payload_header += "\"fanInterval\":" + String(0) + ",";
                 payload_header += "\"dataSendInterval\":" + String(0) + ",";
-                payload_header += "\"millis\":" + String(millis()) + ",";
+                payload_header += "\"mins\":" + String(curMins) + ",";
+                payload_header += "\"elapsedMins\":" + String(curElapsedTime) + ",";
                 payload_header += "\"expID\":" + String(exp_ID) + ",";
                 payload_header += "\"ishead\":" + String(1) + ",";
                 payload_header += "\"writeon\":" + String(write_SD) + ",";
+                payload_header += "\"tarSensor\":" + String(tar_sensor);
                 payload_header += "}";
             file.println(payload_header);
             file.close();
@@ -338,4 +357,5 @@ void loop() {
           
        }
     }
+    //delay(10);
 }
