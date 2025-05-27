@@ -27,7 +27,7 @@ float temperatureThreshold_high = 40.0;  // Порог температуры в
 int fan_pwm_min = 20;  // минимальная скорость
 int fan_pwm_max = 100;  // максимальная скорость
 int manualMode = 0;  // Флаг ручного режима
-
+int exp_ID = 0;
 
 
 unsigned long tempInterval = 500;  // интервал для обновления температуры (500 мс)
@@ -157,8 +157,11 @@ void loop() {
                   payload += "\"fanPwmMax\":" + String(fan_pwm_max) + ",";
                   payload += "\"tempInterval\":" + String(tempInterval) + ",";
                   payload += "\"fanInterval\":" + String(fanControlInterval) + ",";
-                  payload += "\"dataSendInterval\":" + String(dataSendInterval);
+                  payload += "\"dataSendInterval\":" + String(dataSendInterval) + ",";
                   payload += "\"millis\":" + String(currentMillis) + ",";
+                  payload += "\"expID\":" + String(exp_ID) + ",";
+                  payload += "\"ishead\":" + String(0) + ",";
+                  payload += "\"writeon\":" + String(write_SD) + ",";
                   payload += "}";
                   
                   File file = SD.open("/templog.txt", FILE_APPEND);
@@ -193,8 +196,11 @@ void loop() {
                 payload += "\"fanPwmMax\":" + String(fan_pwm_max) + ",";
                 payload += "\"tempInterval\":" + String(tempInterval) + ",";
                 payload += "\"fanInterval\":" + String(fanControlInterval) + ",";
-                payload += "\"dataSendInterval\":" + String(dataSendInterval);
+                payload += "\"dataSendInterval\":" + String(dataSendInterval) + ",";
                 payload += "\"millis\":" + String(currentMillis) + ",";
+                payload += "\"expID\":" + String(exp_ID) + ",";
+                payload += "\"ishead\":" + String(0) + ",";
+                payload += "\"writeon\":" + String(write_SD) + ",";
                 payload += "}";
                 SerialBT.println(payload);
       
@@ -259,6 +265,10 @@ void loop() {
         if (command.startsWith("tar_sensor:")) { //1 or 2 (the sensor to control the fan)
             tar_sensor = command.substring(11).toInt();  // Установка максимальной скорости
         }
+        if (command.startsWith("setid:")) { //1 or 2 (the sensor to control the fan)
+            exp_ID = command.substring(6).toInt();  // Установка максимальной скорости
+            SerialBT.println(exp_ID);
+        }
         if (command.startsWith("write_SD:")) {
             write_SD = command.substring(9).toInt();  
             if (write_SD==1){
@@ -280,11 +290,19 @@ void loop() {
                   payload_header += "\"fanInterval\":" + String(0) + ",";
                   payload_header += "\"dataSendInterval\":" + String(0) + ",";
                   payload_header += "\"millis\":" + String(millis()) + ",";
+                  payload_header += "\"expID\":" + String(exp_ID) + ",";
+                  payload_header += "\"ishead\":" + String(1) + ",";
+                  payload_header += "\"writeon\":" + String(write_SD) + ",";
                   payload_header += "}";
                 file.println(payload_header);
                 file.close();
+                SerialBT.println("SD write ON");
+                if (!SD.begin(HSPI_CS, hspi)) 
+                {
+                    SerialBT.println("SD Card MOUNT FAIL");
+                }
               }
-          }
+          } else {SerialBT.println("SD write OFF");}
         }
         if (command.startsWith("clear_SD:")){
           clear_SD = command.substring(9).toInt();
@@ -308,9 +326,13 @@ void loop() {
                 payload_header += "\"fanInterval\":" + String(0) + ",";
                 payload_header += "\"dataSendInterval\":" + String(0) + ",";
                 payload_header += "\"millis\":" + String(millis()) + ",";
+                payload_header += "\"expID\":" + String(exp_ID) + ",";
+                payload_header += "\"ishead\":" + String(1) + ",";
+                payload_header += "\"writeon\":" + String(write_SD) + ",";
                 payload_header += "}";
             file.println(payload_header);
             file.close();
+            SerialBT.println("SD cleared");
             clear_SD=0;
             }
           
