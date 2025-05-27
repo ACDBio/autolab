@@ -256,6 +256,9 @@ void loop() {
         if (command.startsWith("ds_int:")) {
             dataSendInterval = command.substring(7).toInt();  // Установка максимальной скорости
         }
+        if (command.startsWith("tar_sensor:")) { //1 or 2 (the sensor to control the fan)
+            tar_sensor = command.substring(11).toInt();  // Установка максимальной скорости
+        }
         if (command.startsWith("write_SD:")) {
             write_SD = command.substring(9).toInt();  
             if (write_SD==1){
