@@ -174,7 +174,7 @@ void loop() {
                     //SerialBT.println("Setting ctemp to thermo");
                     currentTemp=thermotemp;}
 
-                TempDiff=currentTemp1-currentTemp;
+                TempDiff=currentTemp-currentTemp1;
 //                String tempStr = String(currentTemp);
 //                SerialBT.print("Temperature: ");
 //                SerialBT.println(tempStr);
