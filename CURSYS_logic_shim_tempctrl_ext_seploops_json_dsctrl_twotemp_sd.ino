@@ -137,20 +137,21 @@ void loop() {
 
         digitalWrite(THERMO_CS, HIGH); // отключить термопару
         //Serial.print("RTD value: "); Serial.println(rtd);
-        SerialBT.println("Out");
-        SerialBT.println();
+//        SerialBT.println("Out");
+//        SerialBT.println();
         
-        if (num_dev==2) {         // измерения готовы по таймеру
-            if (num_dev==2) {  // если чтение успешно
+        if (1==1) {         // измерения готовы по таймеру
+            if (1==1) {  // если чтение успешно
                 ds.select(sensor1Address);
+                if (num_dev==2){
                 currentTemp1=ds.getTempC();
                 //Serial.println(currentTemp1);
                 ds.select(sensor2Address);
-                currentTemp2=ds.getTempC();
+                currentTemp2=ds.getTempC();}
                 //Serial.println(currentTemp2);
-                SerialBT.println("In");
-                SerialBT.println(String(compar_sensor));
-                SerialBT.println();
+//                SerialBT.println("In");
+//                SerialBT.println(String(compar_sensor));
+//                SerialBT.println();
                 
                 if (compar_sensor==3){
                   SerialBT.println("Setting ctemp2 to thermo");
