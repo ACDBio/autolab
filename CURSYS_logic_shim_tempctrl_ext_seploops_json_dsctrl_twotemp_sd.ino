@@ -71,6 +71,8 @@ int num_dev=0;
 
 int tar_sensor=1; //1 or 2
 
+int compar_sensor=3;
+
 float currentTemp=0;
 
 int write_SD=0;
@@ -135,7 +137,8 @@ void loop() {
 
         digitalWrite(THERMO_CS, HIGH); // отключить термопару
         //Serial.print("RTD value: "); Serial.println(rtd);
-        
+        SerialBT.println("Out");
+        SerialBT.println();
         
         if (num_dev==2) {         // измерения готовы по таймеру
             if (num_dev==2) {  // если чтение успешно
@@ -145,12 +148,30 @@ void loop() {
                 ds.select(sensor2Address);
                 currentTemp2=ds.getTempC();
                 //Serial.println(currentTemp2);
+                SerialBT.println("In");
+                SerialBT.println(String(compar_sensor));
+                SerialBT.println();
+                
+                if (compar_sensor==3){
+                  SerialBT.println("Setting ctemp2 to thermo");
+                  currentTemp2=thermotemp;
+                  }
+                 if (compar_sensor==1){
+                  currentTemp2=currentTemp1;
+                  }
+                
                 TempDiff=currentTemp1-currentTemp2;
                 //Serial.println(TempDiff);
                 if (tar_sensor==1){
                   currentTemp=currentTemp1;
-                  } else {currentTemp=currentTemp2;
-                  }
+                  } 
+                  
+                 if (tar_sensor==2) {currentTemp=currentTemp2;
+                  } 
+                  
+                 if (tar_sensor==3) {
+                    SerialBT.println("Setting ctemp to thermo");
+                    currentTemp=thermotemp;}
 
                 
 //                String tempStr = String(currentTemp);
@@ -315,7 +336,9 @@ void loop() {
         if (command.startsWith("fan_pwm_max:")) {
             fan_pwm_max = command.substring(12).toInt();  // Установка максимальной скорости
         }
-
+        if (command.startsWith("compar_sensor:")) {
+            compar_sensor = command.substring(14).toInt();  // Установка максимальной скорости
+        }
 
         if (command.startsWith("set_mixspeed:")) {
             mixspeed = command.substring(13).toInt();  // Установка максимальной скорости
@@ -338,7 +361,7 @@ void loop() {
         if (command.startsWith("ds_int:")) {
             dataSendInterval = command.substring(7).toInt();  // Установка максимальной скорости
         }
-        if (command.startsWith("tar_sensor:")) { //1 or 2 (the sensor to control the fan)
+        if (command.startsWith("tar_sensor:")) { //1 or 2 or 3 (the sensor to control the fan) 3 is the thermocouple
             tar_sensor = command.substring(11).toInt();  // Установка максимальной скорости
         }
         if (command.startsWith("setid:")) { //1 or 2 (the sensor to control the fan)
