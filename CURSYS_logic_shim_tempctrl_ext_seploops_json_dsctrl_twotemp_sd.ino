@@ -69,7 +69,7 @@ uint8_t sensor2Address[8] = {0x28, 0x72, 0x69, 0x35, 0x00, 0x00, 0x00, 0xC3};
 
 int num_dev=0;
 
-int tar_sensor=1; //1 or 2
+int tar_sensor=1; //1 or 2 or 3 (thermocouple)
 
 int compar_sensor=3;
 
@@ -92,7 +92,7 @@ void setup() {
     SerialBT.setPin("1515");
     pinMode(fanPin, OUTPUT);
     Serial.begin(115200);
-    SerialBT.begin("ESP32_Fan_Control");  // Инициализация Bluetooth с именем устройства
+    SerialBT.begin("ESP32_Fan_Control_N");  // Инициализация Bluetooth с именем устройства
     num_dev=ds.getNumberOfDevices();  // первый запрос на измерение
     pinMode(HSPI_SCK, OUTPUT);
     pinMode(HSPI_MOSI, OUTPUT);
@@ -153,15 +153,15 @@ void loop() {
 //                SerialBT.println(String(compar_sensor));
 //                SerialBT.println();
                 
-                if (compar_sensor==3){
-                  SerialBT.println("Setting ctemp2 to thermo");
-                  currentTemp2=thermotemp;
-                  }
-                 if (compar_sensor==1){
-                  currentTemp2=currentTemp1;
-                  }
+//                if (compar_sensor==3){
+//                  //SerialBT.println("Setting ctemp2 to thermo");
+//                  currentTemp2=thermotemp;
+//                  }
+//                 if (compar_sensor==1){
+//                  currentTemp2=currentTemp1;
+//                  }
                 
-                TempDiff=currentTemp1-currentTemp2;
+                //TempDiff=currentTemp1-currentTemp2;
                 //Serial.println(TempDiff);
                 if (tar_sensor==1){
                   currentTemp=currentTemp1;
@@ -171,10 +171,10 @@ void loop() {
                   } 
                   
                  if (tar_sensor==3) {
-                    SerialBT.println("Setting ctemp to thermo");
+                    //SerialBT.println("Setting ctemp to thermo");
                     currentTemp=thermotemp;}
 
-                
+                TempDiff=currentTemp1-currentTemp;
 //                String tempStr = String(currentTemp);
 //                SerialBT.print("Temperature: ");
 //                SerialBT.println(tempStr);
