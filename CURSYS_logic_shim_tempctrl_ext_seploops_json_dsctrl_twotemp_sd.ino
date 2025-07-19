@@ -402,16 +402,18 @@ void loop() {
                   payload_header += "\"expID\":" + String(exp_ID) + ",";
                   payload_header += "\"ishead\":" + String(1) + ",";
                   payload_header += "\"writeon\":" + String(write_SD) + ",";
-                  payload_header += "\"tarSensor\":" + String(tar_sensor);
+                  payload_header += "\"tarSensor\":" + String(tar_sensor)+ ",";
+                  payload_header += "\"thermotemp\":" + String(0);     
                   payload_header += "}";
                 file.println(payload_header);
                 file.close();
             
-                SerialBT.println("SD write ON");
+                //SerialBT.println("SD write ON");
 
               }
              digitalWrite(HSPI_CS, HIGH);   // отключить SD
-          } else {SerialBT.println("SD write OFF");}
+          } else {//SerialBT.println("SD write OFF");
+          }
         }
         if (command.startsWith("clear_SD:")){
           clear_SD = command.substring(9).toInt();
@@ -443,11 +445,12 @@ void loop() {
                 payload_header += "\"expID\":" + String(exp_ID) + ",";
                 payload_header += "\"ishead\":" + String(1) + ",";
                 payload_header += "\"writeon\":" + String(write_SD) + ",";
-                payload_header += "\"tarSensor\":" + String(tar_sensor);
+                payload_header += "\"tarSensor\":" + String(tar_sensor)+ ",";
+                payload_header += "\"thermotemp\":" + String(0);     
                 payload_header += "}";
             file.println(payload_header);
             file.close();
-            SerialBT.println("SD cleared");
+            //SerialBT.println("SD cleared");
             clear_SD=0;
             digitalWrite(HSPI_CS, HIGH);   // отключить SD
             }
