@@ -38,7 +38,7 @@ int newHeaterState = 0;           // State (0 - off, 1 - on)
 int newHeaterManualMode = 0;      // 0 - auto, 1 - manual
 double newHeaterPwmValue = 0;     // PWM value (0-255, double for PID)
 float newHeaterThresholdLow = 20.0;  // Lower temperature threshold
-float newHeaterThresholdHigh = 22.0; // Upper temperature threshold
+float newHeaterThresholdHigh = 30.0; // Upper temperature threshold
 int newHeaterSensor = 4;          // Sensor for new heater (4 - MAX6675)
 float newHeaterTemp = 0;          // Current temperature for new heater
 float rampRate = 0;               // Ramp rate (°C/min)
@@ -132,21 +132,38 @@ Adafruit_MAX31865 thermo = Adafruit_MAX31865(THERMO_CS, &hspi); // HSPI_CS, HSPI
 // 100.0 for PT100, 1000.0 for PT1000
 #define RNOMINAL  100.0
 
-// CHANGE: Added function to read MAX6675 temperature
+//// CHANGE: Added function to read MAX6675 temperature
+//float readKTypeTemperature() {
+//  digitalWrite(K_CS, LOW);
+//  delayMicroseconds(10);
+//  uint16_t data = 0;
+//  data = hspi.transfer(0x00) << 8;
+//  data |= hspi.transfer(0x00);
+//  digitalWrite(K_CS, HIGH);
+//  
+//  if (data & 0x0004) {
+//    return -1;  // Thermocouple error
+//  }
+//  
+//  data >>= 3;
+//  return data * 0.25;  // Temperature in °C
+//}
+
+
+
 float readKTypeTemperature() {
-  digitalWrite(K_CS, LOW);
-  delayMicroseconds(10);
-  uint16_t data = 0;
-  data = hspi.transfer(0x00) << 8;
-  data |= hspi.transfer(0x00);
-  digitalWrite(K_CS, HIGH);
-  
-  if (data & 0x0004) {
-    return -1;  // Thermocouple error
-  }
-  
-  data >>= 3;
-  return data * 0.25;  // Temperature in °C
+    hspi.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));  // ← обязательно!
+    digitalWrite(K_CS, LOW);
+    delayMicroseconds(10);
+    uint16_t data = 0;
+    data = hspi.transfer(0x00) << 8;
+    data |= hspi.transfer(0x00);
+    digitalWrite(K_CS, HIGH);
+    hspi.endTransaction();  // ← обязательно!
+
+    if (data & 0x0004) return -1; // ошибка термопары
+    data >>= 3;
+    return data * 0.25;
 }
 
 void setup() {
@@ -162,9 +179,9 @@ void setup() {
     ledcAttachPin(NEW_HEATER_PIN, NEW_HEATER_PWM_CHANNEL);
     ledcWrite(NEW_HEATER_PWM_CHANNEL, 0);
 
-    // CHANGE: Initialize MAX6675 CS pin
-    pinMode(K_CS, OUTPUT);
-    digitalWrite(K_CS, HIGH);
+//    // CHANGE: Initialize MAX6675 CS pin
+//    pinMode(K_CS, OUTPUT);
+//    digitalWrite(K_CS, HIGH);
 
     // CHANGE: Initialize PID
     newHeaterPID.SetMode(AUTOMATIC);
@@ -181,8 +198,10 @@ void setup() {
     pinMode(HSPI_MISO, INPUT);
     pinMode(HSPI_CS, OUTPUT);
     pinMode(THERMO_CS, OUTPUT);
+    pinMode(K_CS, OUTPUT);
     digitalWrite(HSPI_CS, HIGH); // Ensure CS is high
     digitalWrite(THERMO_CS, HIGH); // Ensure CS is high
+    digitalWrite(K_CS, HIGH); // Ensure CS is high
 
     // Initialize HSPI with custom pins
     hspi.begin(HSPI_SCK, HSPI_MISO, HSPI_MOSI, -1);
@@ -221,6 +240,7 @@ void loop() {
         // CHANGE: Read MAX6675 temperature
         digitalWrite(K_CS, LOW);
         kTemp = readKTypeTemperature();
+        Serial.println(kTemp);
         digitalWrite(K_CS, HIGH);
 
         if (1==1) {         // измерения готовы по таймеру
